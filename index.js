@@ -46,6 +46,7 @@ const
 
 function nextTurn()
 {
+	// Parse the guesses and update people's scores.
 	clearGuesses();
 	gCurrentPlayer = (gCurrentPlayer + 1) % gUserData.length;
 	gCurrentTint = gRows[Math.floor(Math.random() * gRows.length)] + gCols[Math.floor(Math.random() * gCols.length)];
@@ -74,13 +75,13 @@ app.get('/api/poll', (req, res) => {
 
 app.get('/api/start', (req, res) => {
 	const { user } = req.query;
+	nextTurn();
 	for (const i of gUserData)
 	{
 		i.score = 0;
 	}
 	gCurrentPlayer = Math.floor(Math.random() * gUserData.length);
 	res.json({ });
-	nextTurn();
 });
 
 app.get('/api/guess', (req, res) => {

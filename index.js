@@ -139,29 +139,12 @@ app.get('/api/guess', (req, res) => {
 		// All but one player (the hinter) have guessed twice.
 		res.json({ failed: 'Guessing is complete.' });
 	}
-	else if (g1stGuesses.length === gUserData.length - 1)
-	{
-		// All but one player (the hinter) have guessed once.
-		for (const i of g2ndGuesses)
-		{
-			if (i.name === name)
-			{
-				res.json({ failed: 'Please wait for others to guess.' });
-				return;
-			}
-		}
-		g2ndGuesses.push({
-			name,
-			guess,
-			x: 0,
-			y: 0,
-		});
-		res.json(getState(name));
-	}
 	else
 	{
-		// Still on first guesses.
-		for (const i of g1stGuesses)
+		const first = g1stGuesses.length < gUserData.length - 1;
+		const iter = first ? g1stGuesses : g2ndGuesses;
+		// All but one player (the hinter) have guessed once.
+		for (const i of iter)
 		{
 			if (i.name === name)
 			{
@@ -169,11 +152,13 @@ app.get('/api/guess', (req, res) => {
 				return;
 			}
 		}
-		g1stGuesses.push({
+		iter.push({
 			name,
 			guess,
 			x: 0,
 			y: 0,
+			colour: gUserData[id].colour,
+			first,
 		});
 		res.json(getState(name));
 	}

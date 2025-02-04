@@ -1,18 +1,19 @@
 const express = require('express');
 const app = express();
-const port = 3000;
+
+const PORT = 3000;
 
 // Global persistent data.
 const gUserData = [
 	{
 		name: 'Alex',
 		score: 1000,
-		colour: '#FF0000FF',
+		colour: 'FF0000',
 	},
 	{
 		name: 'Tom',
 		score: 1000,
-		colour: '#FF0000FF',
+		colour: 'FF0000',
 	},
 ];
 
@@ -94,7 +95,7 @@ function getState(name)
 		second: (g1stGuesses.length === gUserData.length - 1) ? g2ndGuesses : void 0,
 		current: gCurrentPlayer,
 		id,
-		others: gUserData,
+		players: gUserData,
 		tint: (id === gCurrentPlayer) ? gCurrentTint : '',
 	};
 }
@@ -102,14 +103,26 @@ function getState(name)
 // Serving static files (HTML, CSS, JS)
 app.use(express.static('public'));
 
+app.use(function (req, res, next)
+{
+	res.setHeader("Access-Control-Allow-Origin", "*");
+	res.setHeader('Access-Control-Allow-Methods', '*');
+	res.setHeader("Access-Control-Allow-Headers", "*");
+	next();
+});
+
+app.use(express.json());
+
 // Repeatedly get the current server state.
-app.get('/api/poll', (req, res) => {
+app.get('/api/poll', function (req, res)
+{
 	const { name } = req.query;
 	res.json(getState(name));
 });
 
-app.get('/api/start', (req, res) => {
-	const { user } = req.query;
+app.post('/api/start', function (req, res)
+{
+	const { user } = req.body;
 	nextTurn();
 	for (const i of gUserData)
 	{
@@ -119,8 +132,9 @@ app.get('/api/start', (req, res) => {
 	res.json({ });
 });
 
-app.get('/api/guess', (req, res) => {
-	const { name, guess } = req.query;
+app.post('/api/guess', function (req, res)
+{
+	const { name, guess } = req.body;
 	const id = getPlayerByName(name);
 	if (id == null)
 	{
@@ -164,8 +178,9 @@ app.get('/api/guess', (req, res) => {
 	}
 });
 
-app.get('/api/add-player', (req, res) => {
-	const { name, colour } = req.query;
+app.post('/api/add-player', function (req, res)
+{
+	const { name, colour } = req.body;
 	if (name == null)
 	{
 		res.json({ failed: 'No name given.' });
@@ -187,7 +202,8 @@ app.get('/api/add-player', (req, res) => {
 });
 
 // Starting the server
-app.listen(port, () => {
-    console.log(`Server is listening at http://localhost:${port}`);
+app.listen(PORT, function ()
+{
+	console.log(`Server is listening at http://localhost:${PORT}`);
 });
 

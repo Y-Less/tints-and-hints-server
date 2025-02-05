@@ -80,6 +80,7 @@ function isGuessClose(guess)
 function nextTurn()
 {
 	// Parse the guesses and update people's scores.
+	const got = new Set();
 	if (g1stGuesses != null)
 	{
 		for (const i of g1stGuesses)
@@ -89,6 +90,7 @@ function nextTurn()
 			{
 				// 5 points for a correct first guess.
 				gUserData[id].score += 5;
+				got.add(id);
 			}
 			else if (isGuessClose(i.guess))
 			{
@@ -105,7 +107,8 @@ function nextTurn()
 			if (i.guess === gCurrentTint)
 			{
 				// 3 points for a correct second guess.
-				gUserData[id].score += 3;
+				gUserData[id].score += 4;
+				got.add(id);
 			}
 			else if (isGuessClose(i.guess))
 			{
@@ -114,9 +117,10 @@ function nextTurn()
 			}
 		}
 	}
-	
-	
-	
+	if (gCurrentPlayer !== -1)
+	{
+		gUserData[gCurrentPlayer].score += got.size * 3;
+	}
 	clearGuesses();
 	gCurrentPlayer = (gCurrentPlayer + 1) % gUserData.length;
 	gCurrentTint = COLS[Math.floor(Math.random() * COLS.length)] + ROWS[Math.floor(Math.random() * ROWS.length)];

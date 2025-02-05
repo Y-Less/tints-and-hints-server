@@ -68,9 +68,55 @@ const
 	COLS = Object.keys(GRID),
 	ROWS = Object.keys(GRID.A);
 
+function isGuessClose(guess)
+{
+	const x0 = gCurrentTint.charCodeAt(0);
+	const y0 = gCurrentTint.charCodeAt(1);
+	const x1 = guess.charCodeAt(0);
+	const y1 = guess.charCodeAt(1);
+	return (x0 - 1 === x1 || x0 === x1 || x0 + 1 === x1) && (y0 - 1 === y1 || y0 === y1 || y0 + 1 === y1);
+}
+
 function nextTurn()
 {
 	// Parse the guesses and update people's scores.
+	if (g1stGuesses != null)
+	{
+		for (const i of g1stGuesses)
+		{
+			const id = getPlayerByName(i.name);
+			if (i.guess === gCurrentTint)
+			{
+				// 5 points for a correct first guess.
+				gUserData[id].score += 5;
+			}
+			else if (isGuessClose(i.guess))
+			{
+				// 2 points for a close first guess.
+				gUserData[id].score += 2;
+			}
+		}
+	}
+	if (g2ndGuesses != null)
+	{
+		for (const i of g2ndGuesses)
+		{
+			const id = getPlayerByName(i.name);
+			if (i.guess === gCurrentTint)
+			{
+				// 3 points for a correct second guess.
+				gUserData[id].score += 3;
+			}
+			else if (isGuessClose(i.guess))
+			{
+				// 1 point for a close second guess.
+				gUserData[id].score += 1;
+			}
+		}
+	}
+	
+	
+	
 	clearGuesses();
 	gCurrentPlayer = (gCurrentPlayer + 1) % gUserData.length;
 	gCurrentTint = COLS[Math.floor(Math.random() * COLS.length)] + ROWS[Math.floor(Math.random() * ROWS.length)];
@@ -157,60 +203,43 @@ app.post('/api/guess', function (req, res)
 	}
 	else if (g2ndGuesses == null)
 	{
-		if (g1stGuesses.length === gUserData.length - 1)
+		for (const i of g1stGuesses)
 		{
-			// All but one player (the hinter) have guessed twice.
-			res.json({ failed: 'First guessing is complete.' });
-		}
-		else
-		{
-			for (const i of g1stGuesses)
+			if (i.name === name)
 			{
-				if (i.name === name)
-				{
-					res.json({ failed: 'Please wait for others to guess.' });
-					return;
-				}
+				res.json({ failed: 'Please wait for others to guess.' });
+				return;
 			}
-			g1stGuesses.push({
-				name,
-				guess,
-				x: 0,
-				y: 0,
-				colour: gUserData[id].colour,
-				first: true,
-			});
-			res.json(getState(name));
 		}
+		g1stGuesses.push({
+			name,
+			guess,
+			x: 0,
+			y: 0,
+			colour: gUserData[id].colour,
+			first: true,
+		});
+		res.json(getState(name));
 	}
 	else
 	{
-		if (g2ndGuesses.length === gUserData.length - 1)
+		for (const i of g2ndGuesses)
 		{
-			// All but one player (the hinter) have guessed twice.
-			res.json({ failed: 'Second guessing is complete.' });
-		}
-		else
-		{
-			for (const i of g2ndGuesses)
+			if (i.name === name)
 			{
-				if (i.name === name)
-				{
-					res.json({ failed: 'Please wait for others to guess.' });
-					return;
-				}
+				res.json({ failed: 'Please wait for others to guess.' });
+				return;
 			}
-			g2ndGuesses.push({
-				name,
-				guess,
-				x: 0,
-				y: 0,
-				colour: gUserData[id].colour,
-				first: false,
-			});
-			res.json(getState(name));
-
 		}
+		g2ndGuesses.push({
+			name,
+			guess,
+			x: 0,
+			y: 0,
+			colour: gUserData[id].colour,
+			first: false,
+		});
+		res.json(getState(name));
 	}
 });
 

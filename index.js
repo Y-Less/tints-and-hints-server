@@ -86,7 +86,10 @@ function nextTurn()
 		for (const i of g1stGuesses)
 		{
 			const id = getPlayerByName(i.name);
-			if (i.guess === gCurrentTint)
+			if (id == null)
+			{
+			}
+			else if (i.guess === gCurrentTint)
 			{
 				// 5 points for a correct first guess.
 				gUserData[id].score += 5;
@@ -104,7 +107,10 @@ function nextTurn()
 		for (const i of g2ndGuesses)
 		{
 			const id = getPlayerByName(i.name);
-			if (i.guess === gCurrentTint)
+			if (id == null)
+			{
+			}
+			else if (i.guess === gCurrentTint)
 			{
 				// 3 points for a correct second guess.
 				gUserData[id].score += 4;
@@ -120,9 +126,9 @@ function nextTurn()
 	if (gCurrentPlayer !== -1)
 	{
 		gUserData[gCurrentPlayer].score += got.size * 3;
+		gCurrentPlayer = (gCurrentPlayer + 1) % gUserData.length;
 	}
 	clearGuesses();
-	gCurrentPlayer = (gCurrentPlayer + 1) % gUserData.length;
 	gCurrentTint = COLS[Math.floor(Math.random() * COLS.length)] + ROWS[Math.floor(Math.random() * ROWS.length)];
 }
 
@@ -179,13 +185,35 @@ app.get('/api/stop', function (req, res)
 
 app.post('/api/next', function (req, res)
 {
-	if (g2ndGuesses == null)
+	const { name, guess } = req.body;
+	const id = getPlayerByName(name);
+	if (id !== gCurrentPlayer)
 	{
-		g2ndGuesses = [];
+		res.json({ failed: 'You are not the hinter.' });
+	}
+	else if (g2ndGuesses == null)
+	{
+		if (g1stGuesses.length === gUserData.length - 1)
+		{
+			g2ndGuesses = [];
+			res.json({ });
+		}
+		else
+		{
+			res.json({ failed: 'Guessing is not complete.' });
+		}
 	}
 	else
 	{
-		nextTurn();
+		if (g2ndGuesses.length === gUserData.length - 1)
+		{
+			nextTurn();
+			res.json({ });
+		}
+		else
+		{
+			res.json({ failed: 'Guessing is not complete.' });
+		}
 	}
 });
 
